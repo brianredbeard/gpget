@@ -17,3 +17,16 @@ the attestation of that file.  The two standard extensions for these files are
 `.asc` files are Base64 encoded armored signatures.  In both cases the
 signature files are "detached" and created in compliance with RFC XXXX.
 
+This utility will download those files and operate largely as one would expect
+`curl` to, only with the addition of GPG validation.  First, if the files fail
+to pass GPG validation, the utility will exit on a non-zero error code.  This
+is to ensure that a user can correctly operate using normal POSIX error
+handling.  Next, as the files have passed validation, we achieve the next choice
+in the program.  If the user has supplied no additional arguments, the utility
+will output the data stream to STDOUT.   If the user has supplied to argument
+`-O`, then the file will be written down to disk, and exit with a zero error 
+code.  If the file cannot be written to disk, the utility will exit not zero. 
+
+In short, if there is any behavior which deviates from the basic pattern of 
+"request a URI, validate it cryptographically, and pass the data to the users
+desired location" the program will exit non-zero.
