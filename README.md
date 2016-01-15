@@ -14,8 +14,9 @@ Through a series of well formed URIs we attempt a series of HTTP GET requests
 to retrieve both a desired endpoint as well as a series of extensions used for
 the attestation of that file.  The two standard extensions for these files are
 `.sig` and `.asc`.  `.sig` files are binary based GPG/PGP signatures while
-`.asc` files are Base64 encoded armored signatures.  In both cases the
-signature files are "detached" and created in compliance with RFC 4880.
+`.asc` files are Base64 encoded armored signatures.  *GPGget expects to
+retrieve the armored `.asc` extention.*  The signature files are "detached" 
+and created in compliance with RFC 4880.
 
 This utility will download those files and operate largely as one would expect
 `curl` to, only with the addition of GPG validation.  First, if the files fail
@@ -25,7 +26,7 @@ handling.  Next, as the files have passed validation, we achieve the next choice
 in the program.  If the user has supplied no additional arguments, the utility
 will output the data stream to STDOUT.   If the user has supplied to argument
 `-O`, then the file will be written down to disk, and exit with a zero error 
-code.  If the file cannot be written to disk, the utility will exit not zero. 
+code.  If the file cannot be written to disk, the utility will exit non-zero. 
 
 In short, if there is any behavior which deviates from the basic pattern of 
 "request a URI, validate it cryptographically, and pass the data to the users
