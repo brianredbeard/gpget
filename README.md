@@ -1,4 +1,4 @@
-## GPGet / Gurl
+## GPGet 
 
 ### About
 
@@ -15,7 +15,7 @@ to retrieve both a desired endpoint as well as a series of extensions used for
 the attestation of that file.  The two standard extensions for these files are
 `.sig` and `.asc`.  `.sig` files are binary based GPG/PGP signatures while
 `.asc` files are Base64 encoded armored signatures.  In both cases the
-signature files are "detached" and created in compliance with RFC XXXX.
+signature files are "detached" and created in compliance with RFC 4880.
 
 This utility will download those files and operate largely as one would expect
 `curl` to, only with the addition of GPG validation.  First, if the files fail
@@ -30,3 +30,12 @@ code.  If the file cannot be written to disk, the utility will exit not zero.
 In short, if there is any behavior which deviates from the basic pattern of 
 "request a URI, validate it cryptographically, and pass the data to the users
 desired location" the program will exit non-zero.
+
+## Trust
+
+The GPG trust model is patterened after the APPC container specification.
+Originally GPG utilized the standard keychain mechanism generally used by
+most PGP/GPG based utilities.  The reality was that the actual use pattern
+follows much more closely to that of the CA trust model of openssl.  The
+result is the ability to trust a series of signatures solely through the
+use of file operations and without execution of any GPG/GPG2 binary directly.
