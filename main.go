@@ -29,6 +29,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 )
 
 /*
@@ -40,11 +41,12 @@ GPG/PGP versus just assuming it's on the local keyring, so be it.
 */
 
 var (
-	flagHelp = flag.Bool("help", false, "print help and exit")
-	flagURL  = flag.String("url", "", "url to retrieve")
-	flagMem  = flag.Bool("O", false, "save the file using it's original name")
-	flagPath = flag.String("o", "./", "location to place successful download")
-	flagBin  = flag.Bool("b", false, "location to place successful download")
+	flagHelp  = flag.Bool("help", false, "print help and exit")
+	flagURL   = flag.String("url", "", "url to retrieve")
+	flagMem   = flag.Bool("O", false, "save the file using it's original name")
+	flagPath  = flag.String("o", "./", "location to place successful download")
+	flagKeyid = flag.String("k", "", "GPG key identity expected to be used for the remote file")
+	flagBin   = flag.Bool("b", false, "Use a binary signature instead of armored ASCII")
 )
 
 /*
@@ -209,6 +211,14 @@ func checkGPG(file File) (state SigState, err error) {
 		os.Exit(2)
 	}
 	state.sig = signer.PrimaryKey.KeyIdShortString()
+
+	if len(*flagKeyid) > 0 {
+		keyid := strings.ToUpper(*flagKeyid)
+		if keyid != state.sig {
+			fmt.Printf("The remote file was not signed by the expected GPG Public key. Expected %s and got %s\n", keyid, state.sig)
+			os.Exit(2)
+		}
+	}
 	state.success = true
 	return state, nil
 }
