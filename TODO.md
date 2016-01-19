@@ -5,7 +5,8 @@ Below is a rough list of things to be resolved
 ### Functionality
   * Improve in memory handling
   * Improve filename handling
-  * Add flag to support binary signatures (note: Concerns about complexity of code path and auditing)
+  * Support Trust levels
+  * Pin expected fingerprint in flags
   * Document exit codes and make them more explicit
 
 ### Bugs
