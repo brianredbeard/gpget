@@ -210,12 +210,31 @@ func checkGPG(file File) (state SigState, err error) {
 		fmt.Printf("Invalid signature or public key not present: %s\n", err)
 		os.Exit(2)
 	}
-	state.sig = signer.PrimaryKey.KeyIdShortString()
 
-	if len(*flagKeyid) > 0 {
-		keyid := strings.ToUpper(*flagKeyid)
-		if keyid != state.sig {
-			fmt.Printf("The remote file was not signed by the expected GPG Public key. Expected %s and got %s\n", keyid, state.sig)
+	state.sig = signer.PrimaryKey.KeyIdString()
+
+	l := len(*flagKeyid)
+	if l > 0 {
+		var rid string
+
+		// Force the local id to be all uppercase
+		lid := strings.ToUpper(*flagKeyid)
+
+		// check the number of chars on the remote id to see if it's a
+		// short or long id. If it's not 8 or 16, it's not valid.
+		switch l {
+		case 8:
+			rid = signer.PrimaryKey.KeyIdShortString()
+		case 16:
+			rid = signer.PrimaryKey.KeyIdString()
+		}
+		if len(rid) == 0 {
+			fmt.Printf("You did not specify a valid GPG keyid length. Must be 8 or 16 characters.")
+			os.Exit(2)
+		}
+
+		if lid != rid {
+			fmt.Printf("The remote file was not signed by the expected GPG Public key. Expected %s and got %s\n", lid, rid)
 			os.Exit(2)
 		}
 	}
