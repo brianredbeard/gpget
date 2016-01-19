@@ -6,7 +6,6 @@ Below is a rough list of things to be resolved
   * Improve in memory handling
   * Improve filename handling
   * Support Trust levels
-  * Pin expected fingerprint in flags
   * Document exit codes and make them more explicit
 
 ### Bugs
