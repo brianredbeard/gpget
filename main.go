@@ -1,3 +1,23 @@
+/*
+GPGet - A tool for securely retrieving files from hostile storage
+
+Copyright (C) 2016 Brian 'redbeard' Harrington
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 package main
 
 import (
@@ -6,11 +26,9 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"path"
-	"strings"
 )
 
 /*
@@ -26,6 +44,7 @@ var (
 	flagURL  = flag.String("url", "", "url to retrieve")
 	flagMem  = flag.Bool("O", false, "save the file using it's original name")
 	flagPath = flag.String("o", "./", "location to place successful download")
+	flagBin  = flag.Bool("b", false, "location to place successful download")
 )
 
 /*
@@ -40,7 +59,6 @@ signature takes precidence as per RFC 4880.
 
 type File struct {
 	name      string
-	armor     string
 	signature []byte
 	content   []byte
 }
@@ -59,12 +77,19 @@ func main() {
 		os.Exit(1)
 	}
 
-	gpfile := dlFile(*flagURL)
+	gpfile, err := dlFile(*flagURL)
+
+	if err != nil {
+		fmt.Println("Failed to download file: %s", err)
+		os.Exit(3)
+	}
 
 	state, err := checkGPG(gpfile)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("Failed to validate GPG signature: %s", err)
+		os.Exit(3)
 	}
+
 	if !state.success {
 		fmt.Println("Unknown error in retrieving your file")
 		os.Exit(3)
@@ -113,14 +138,19 @@ func getRemote(url string) (data []byte, err error) {
 }
 
 // download a specified file and look for a well formatted signature of the
-// form "url" + ".asc" representing the binary and base64 gpg signatures
-// respectively
+// form "url" + ".asc" or ".sig" representing the binary and base64 gpg
+// signatures respectively
 
-func dlFile(url string) (file File) {
+func dlFile(url string) (file File, err error) {
 	var myfile File
-	var err error
-	var armor []byte
-	asc := url + ".asc"
+	var sig []byte
+	var ext string
+
+	if *flagBin {
+		ext = url + ".sig"
+	} else {
+		ext = url + ".asc"
+	}
 
 	myfile.name = path.Base(url)
 	myfile.content, err = getRemote(url)
@@ -135,24 +165,26 @@ func dlFile(url string) (file File) {
 		}
 	}
 
-	armor, err = getRemote(asc)
+	sig, err = getRemote(ext)
 
 	if err != nil {
 		if err == http.ErrMissingFile {
-			fmt.Printf("Error (404): the file %s did not exist, you must sign all files with an ASCII armored signature", url+".asc")
+			fmt.Printf("Error (404): the file %s did not exist, you must sign all files with an ASCII armored signature", ext)
 			os.Exit(1)
 		} else {
-			fmt.Println("Transport error retreiving armored signature: " + url + ".asc")
+			fmt.Println("Transport error retreiving armored signature: ",
+				ext)
 			os.Exit(1)
 		}
 	}
 
-	myfile.armor = string(armor)
+	myfile.signature = sig
 
-	return myfile
+	return myfile, nil
 }
 
 func checkGPG(file File) (state SigState, err error) {
+	var signer *openpgp.Entity
 	keypath := path.Join(os.Getenv("HOME"), "/.gnupg/pubring.gpg")
 	keys, err := os.Open(keypath)
 	if err != nil {
@@ -167,8 +199,11 @@ func checkGPG(file File) (state SigState, err error) {
 		os.Exit(2)
 	}
 
-	signer, err := openpgp.CheckArmoredDetachedSignature(keyring, bytes.NewReader(file.content), strings.NewReader(file.armor))
-
+	if *flagBin {
+		signer, err = openpgp.CheckDetachedSignature(keyring, bytes.NewReader(file.content), bytes.NewReader(file.signature))
+	} else {
+		signer, err = openpgp.CheckArmoredDetachedSignature(keyring, bytes.NewReader(file.content), bytes.NewReader(file.signature))
+	}
 	if err != nil {
 		fmt.Printf("Invalid signature or public key not present: %s\n", err)
 		os.Exit(2)
