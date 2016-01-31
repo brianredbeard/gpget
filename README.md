@@ -1,4 +1,4 @@
-## GPGet 
+## GPget 
 
 ### About
 
@@ -23,7 +23,7 @@ a strong mechanism of attesting that their files have not been modified on
 storage or in transit.  TLS can only protect against the _transport_ security
 not the on disk case.  This it is desireable to take this to the lowest common
 denominator.  Why not build a system even usable on _hostile_ networks?  This
-is the goal of *GPGet*.
+is the goal of *GPget*.
 
 #### Mechanism
 
@@ -64,7 +64,7 @@ use of file operations and without execution of any GPG/GPG2 binary directly.
 Given a situation where users want to provide access to a host without the full
 feature set of a centralized AAA (authentication, authorization, and 
 accounting) system a streamlined mechanism for securely providing this access
-can be achieved with GPGet.
+can be achieved with GPget.
 
 First, one would generate an ssh keypair with which to access a host:
 

@@ -1,5 +1,5 @@
 /*
-GPGet - A tool for securely retrieving files from hostile storage
+GPget - A tool for securely retrieving files from hostile storage
 
 Copyright (C) 2016 Brian 'redbeard' Harrington
 
