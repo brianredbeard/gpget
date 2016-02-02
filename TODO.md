@@ -8,7 +8,7 @@ Below is a rough list of things to be resolved
   * Support Trust levels
   * Document exit codes and make them more explicit
   * Add clearsign support (Fixes [Issue 2](gpget#3))
-
+  * Show the progress of a current download. 
 
 ### Bugs
   * Don't use  ioutil.ReadAll() when reading the HTTP content. Instead use an io.Reader() (Fixes [Issue 4](gpget#4))
