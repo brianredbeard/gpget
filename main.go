@@ -23,6 +23,7 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/go.crypto/openpgp"
+	"code.google.com/p/go.crypto/openpgp/clearsign"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -48,6 +49,7 @@ var (
 	flagPath  = flag.String("o", "./", "location to place successful download")
 	flagKeyid = flag.String("k", "", "GPG key identity expected to be used for the remote file")
 	flagBin   = flag.Bool("b", false, "Use a binary signature instead of armored ASCII")
+	flagClear = flag.Bool("c", false, "Download the message as clearsigned armored ASCII")
 )
 
 /*
@@ -69,6 +71,7 @@ type File struct {
 type SigState struct {
 	success bool
 	sig     string
+	content []byte
 }
 
 func main() {
@@ -87,7 +90,7 @@ func main() {
 		os.Exit(3)
 	}
 
-	state, err := checkGPG(gpfile)
+	state, err := checkGPG(&gpfile)
 	if err != nil {
 		fmt.Println("Failed to validate GPG signature: %s", err)
 		os.Exit(3)
@@ -113,7 +116,7 @@ func main() {
 		}
 
 	} else {
-		fmt.Println(string(gpfile.content))
+		fmt.Print(string(gpfile.content))
 	}
 	os.Exit(0)
 }
@@ -174,26 +177,29 @@ func dlFile(uri string) (file File, err error) {
 		u.Path += ".asc"
 	}
 
-	sig, err = getRemote(u.String())
+	if !*flagClear {
+		sig, err = getRemote(u.String())
 
-	if err != nil {
-		if err == http.ErrMissingFile {
-			fmt.Printf("Error (404): the file %s did not exist, you must sign all files with an ASCII armored signature", ext)
-			os.Exit(1)
-		} else {
-			fmt.Println("Transport error retreiving detached signature: ",
-				ext)
-			os.Exit(1)
+		if err != nil {
+			if err == http.ErrMissingFile {
+				fmt.Printf("Error (404): the file %s did not exist, you must sign all files with an ASCII armored signature", ext)
+				os.Exit(1)
+			} else {
+				fmt.Println("Transport error retreiving detached signature: ",
+					ext)
+				os.Exit(1)
+			}
 		}
-	}
 
-	myfile.signature = sig
+		myfile.signature = sig
+	}
 
 	return myfile, nil
 }
 
-func checkGPG(file File) (state SigState, err error) {
+func checkGPG(file *File) (state SigState, err error) {
 	var signer *openpgp.Entity
+	var cs *clearsign.Block
 	keypath := path.Join(os.Getenv("HOME"), "/.gnupg/pubring.gpg")
 	keys, err := os.Open(keypath)
 	if err != nil {
@@ -206,6 +212,27 @@ func checkGPG(file File) (state SigState, err error) {
 	if err != nil {
 		fmt.Printf("Error reading public keyring: %s\n", err)
 		os.Exit(2)
+	}
+
+	if *flagClear {
+		cs, _ = clearsign.Decode(file.content)
+		if cs == nil {
+			fmt.Printf("Problem decoding clearsign signature from file %s\n", file.name)
+			os.Exit(2)
+		}
+
+		lsig, err := ioutil.ReadAll(cs.ArmoredSignature.Body)
+
+		if err != nil {
+			fmt.Printf("Problem reading signature from %s.  Are you sure this file is clearsigned?: %s\n", file.name, err)
+			os.Exit(2)
+		}
+		if len(lsig) > 0 {
+			file.signature = lsig
+			file.content = cs.Bytes
+			*flagBin = true
+		}
+
 	}
 
 	if *flagBin {
@@ -245,6 +272,16 @@ func checkGPG(file File) (state SigState, err error) {
 			os.Exit(2)
 		}
 	}
+
+	// Due to how clearsign works, the detached signature has to be
+	// processed using the Bytes field, but the stripped content is located
+	// in the Plaintext field. As we've verified the signature was valid
+	// we can now fix the content
+
+	if *flagClear {
+		file.content = cs.Plaintext
+	}
+
 	state.success = true
 	return state, nil
 }

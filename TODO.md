@@ -7,7 +7,6 @@ Below is a rough list of things to be resolved
   * Improve filename handling
   * Support Trust levels
   * Document exit codes and make them more explicit
-  * Add clearsign support (Fixes [Issue 3](gpget#3))
   * Show the progress of a current download (Fixes [Issue 2](gpget#2))
 
 ### Bugs
