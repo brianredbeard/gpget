@@ -12,7 +12,6 @@ Below is a rough list of things to be resolved
 
 ### Bugs
   * Don't use  ioutil.ReadAll() when reading the HTTP content. Instead use an io.Reader() (Fixes [Issue 4](gpget#4))
-  * GPget likely does not handle query parameters correctly (e.g. http://example.com/mifile.txt?dl=0)
 
 ### Vulnerabilities
 None reported

@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -143,38 +144,44 @@ func getRemote(url string) (data []byte, err error) {
 // form "url" + ".asc" or ".sig" representing the binary and base64 gpg
 // signatures respectively
 
-func dlFile(url string) (file File, err error) {
+func dlFile(uri string) (file File, err error) {
 	var myfile File
 	var sig []byte
 	var ext string
+	u, err := url.Parse(uri)
 
-	if *flagBin {
-		ext = url + ".sig"
-	} else {
-		ext = url + ".asc"
+	if err != nil {
+		fmt.Printf("Error parsing the URL %s\n", uri)
+		os.Exit(2)
 	}
 
-	myfile.name = path.Base(url)
-	myfile.content, err = getRemote(url)
+	myfile.name = path.Base(u.Path)
+	myfile.content, err = getRemote(u.String())
 
 	if err != nil {
 		if err == http.ErrMissingFile {
-			fmt.Printf("Error (404): the file %s did not exist\n", url)
+			fmt.Printf("Error (404): the file %s did not exist\n", uri)
 			os.Exit(1)
 		} else {
-			fmt.Printf("Transport error retreiving %s\n" + url)
+			fmt.Printf("Transport error retreiving %s\n" + uri)
 			os.Exit(1)
 		}
 	}
 
-	sig, err = getRemote(ext)
+	if *flagBin {
+		u.Path += ".sig"
+	} else {
+		u.Path += ".asc"
+	}
+
+	sig, err = getRemote(u.String())
 
 	if err != nil {
 		if err == http.ErrMissingFile {
 			fmt.Printf("Error (404): the file %s did not exist, you must sign all files with an ASCII armored signature", ext)
 			os.Exit(1)
 		} else {
-			fmt.Println("Transport error retreiving armored signature: ",
+			fmt.Println("Transport error retreiving detached signature: ",
 				ext)
 			os.Exit(1)
 		}
