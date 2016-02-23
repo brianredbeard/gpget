@@ -22,8 +22,6 @@ package main
 
 import (
 	"bytes"
-	"code.google.com/p/go.crypto/openpgp"
-	"code.google.com/p/go.crypto/openpgp/clearsign"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -32,6 +30,9 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"golang.org/x/crypto/openpgp"
+	"golang.org/x/crypto/openpgp/clearsign"
 )
 
 /*
