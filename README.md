@@ -134,8 +134,8 @@ retrieve those keys from the untrusted storage, and yet cycle keys as needed.
 Imagine the following processes happening on provisioning:
 
 ```
-$ gpg --import C2A0C467
-gpg: key C2A0C467: public key "Jenkins Build System (Example, Inc) <jenkins@example.com>" imported
+$ gpg --import B968A00BC2A0C467
+gpg: key 0xB968A00BC2A0C467: public key "Jenkins Build System (Example, Inc) <jenkins@example.com>" imported
 gpg: Total number processed: 1
 gpg:               imported: 1  (RSA: 1)
 ```
@@ -143,7 +143,7 @@ gpg:               imported: 1  (RSA: 1)
 and a cron job calling the following command every five minutes
 
 ```
-$ /usr/local/bin/gpget -k C2A0C467 -o /home/nobody/.ssh/authorized_keys --url http://s3.aws.amazon.com/examplebucket/foo.pub
+$ /usr/local/bin/gpget -k B968A00BC2A0C467 -o /home/nobody/.ssh/authorized_keys --url http://s3.aws.amazon.com/examplebucket/foo.pub
 ```
 
 This will continuously pull down that public key file, verify the GPG based
