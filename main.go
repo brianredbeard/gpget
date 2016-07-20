@@ -259,6 +259,7 @@ func checkGPG(file *File) (state SigState, err error) {
 		// short or long id. If it's not 8 or 16, it's not valid.
 		switch l {
 		case 8:
+			fmt.Println("WARNING: The use of short ids is NOT secure.  See https://evil32.com for more info.")
 			rid = signer.PrimaryKey.KeyIdShortString()
 		case 16:
 			rid = signer.PrimaryKey.KeyIdString()
