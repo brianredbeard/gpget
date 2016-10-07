@@ -260,8 +260,10 @@ func checkGPG(file *File) (state SigState, err error) {
 		switch l {
 		case 8:
 			fmt.Println("WARNING: The use of short ids is NOT secure.  See https://evil32.com for more info.")
-			rid = signer.PrimaryKey.KeyIdShortString()
+			fmt.Println("Refusing to use insecure key mechanism. Exiting.")
+			os.Exit(1)
 		case 16:
+			fmt.Println("WARNING: The use of long ids is NOT considered to be secure.  See https://evil32.com for more info.")
 			rid = signer.PrimaryKey.KeyIdString()
 		}
 		if len(rid) == 0 {
